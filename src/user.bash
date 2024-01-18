@@ -1,12 +1,11 @@
 #!/user/bin/env bash
-set -ex
 
 subcommand_fail() {
     die "$1 Please speciffy one of the following: add, list"
 }
 
 
-cmd_add() {
+cmd_add_user() {
     [[ $# -ne 1 ]] && die "Usage: $PROGRAM $COMMAND add gpg-id"
     gpg_id=$1
     user_directory="$PREFIX/.users"
@@ -25,12 +24,12 @@ cmd_add() {
 }
 
 
-cmd_list() {
+cmd_list_user() {
     [[ $# -ne 0 ]] && die "Usage: $PROGRAM $COMMAND list"
     ls "$PREFIX/.users"
 }
 
-cmd_trust() {
+cmd_import_user() {
     [[ $# -lt 1 ]] && die "Usage: $PROGRAM $COMMAND gpg-id..."
     users_to_trust=()
     user_directory="$PREFIX/.users"
@@ -49,17 +48,17 @@ cmd_trust() {
             break
         fi
     done
-    for user in "${users_to_trust[@]}"; do
-        $GPG $PASSWORD_STORE_GPG_OPTS --import $user
+    for user_file in "${users_to_trust[@]}"; do
+        $GPG $PASSWORD_STORE_GPG_OPTS --import $user_file
     done
 }
 
 [[ $# -lt 1 ]] && subcommand_fail "No subcommand given."
 
 case "$1" in
-    add) shift;     cmd_add "$@" ;;
-    list|ls) shift; cmd_list "$@" ;;
-    trust) shift;   cmd_trust "$@" ;;
+    add) shift;     cmd_add_user "$@" ;;
+    list|ls) shift; cmd_list_user "$@" ;;
+    import) shift;   cmd_import_user "$@" ;;
     *)              subcommand_fail "Unknown subcommand '$1'." ;;
 esac
 exit 0

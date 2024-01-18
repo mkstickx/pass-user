@@ -1,5 +1,4 @@
 #!/user/bin/env bash
-set -ex
 
 
 [[ $# -ne 1 ]] && die "Usage: $PROGRAM $COMMAND git-repo"
