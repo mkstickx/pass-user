@@ -19,9 +19,9 @@ alice "pass user exists alice" --fails
 
 info "As she is not a user yet she is not privy to these passwords."
 alice "pass user privy alice for_alice_only" --fails
-alice "pass for_alice_only/foo"
+alice "pass show for_alice_only/foo" --output "SECRET_FOO"
 alice "pass user privy alice shared" --fails
-alice "pass shared/bar"
+alice "pass show shared/bar" --output "SECRET_BAR"
 alice "pass user privy alice for_alice_only shared" --fails
 alice "pass user privy alice unknown_path" --fails
 
@@ -53,23 +53,23 @@ bob "pass user import --all"
 
 info "He is not privy concerning any passwords and can not read them."
 bob "pass user privy bob for_alice_only" --fails
-bob "pass for_alice_only/foo" --fails
+bob "pass show for_alice_only/foo" --fails
 bob "pass user privy bob shared" --fails
-bob "pass shared/bar" --fails
+bob "pass show shared/bar" --fails
 bob "pass user privy bob for_alice_only shared" --fails
 bob "pass user privy bob unknown_path" --fails
 
 info "He can create a secret for alice, but he will not be able to read it."
-alice "echo \"I LOVE YOU\" | pass insert -e for_alice_only/bar"
+bob "echo \"I LOVE YOU\" | pass insert -e for_alice_only/bar"
 bob "pass user privy bob for_alice_only/bar" --fails
-bob "pass for_alice_only/bar" --fails
+bob "pass show for_alice_only/bar" --fails
 
 info "Bob pushes to the remote repository."
 bob "pass git push"
 
 info "Alice pulls his changes and can read the password he created for her."
 alice "pass git pull"
-alice "pass for_alice_only/bar" --ouput "I LOVE YOU"
+alice "pass show for_alice_only/bar" --output "I LOVE YOU"
 
 alice "pass user import bob"
 
