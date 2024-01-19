@@ -1,7 +1,7 @@
 
 SRC_DIR=$(cd ../src && pwd)
 
-function setup_context() {
+setup_context() {
     local root="$1"
     local pass_user="$2"
     local user_directory="$root/$pass_user"
@@ -63,7 +63,7 @@ FAINT="2"
 ITALIC="3"
 UNDERLINE="4"
 
-function context() {
+context() {
     local user=$1
     shift
     local user_color=$1
@@ -72,6 +72,13 @@ function context() {
     shift
     local command=$1
     shift
+    local expect_fail="0"
+    while [[ $# -gt 0 ]]; do
+        if [[ "$1" == "--fails" ]]; then
+            expect_fail="1"
+        fi
+        shift
+    done
     echo -e "\e[${BOLD};${user_color}m${user}:~\e[0m \e[${NORMAL};${user_color}m$command\e[0m"
 
     PASSWORD_STORE_DIR="$user_directory/store" \
@@ -84,14 +91,14 @@ function context() {
 
     local exit_code=$?
     if [[ $exit_code -eq 0 ]]; then
-        if [[ "$*" == *"--fails"* ]]; then
+        if [[ $expect_fail -ne 0 ]]; then
             echo "--- UNEXPECTED SUCCESS ---" | out_fmt "$BOLD" "$RED"
             exit 1
         else
             echo "--- SUCCESS ---" | out_fmt "$BOLD" "$GREEN"
         fi
     else
-        if [[ "$*" == *"--fails"* ]]; then
+        if [[ $expect_fail -ne 0 ]]; then
             echo "--- FAILED AS EXPECTED ---" | out_fmt "$BOLD" "$GREEN"
         else
             echo "--- FAILED ---" | out_fmt "$BOLD" "$RED"
