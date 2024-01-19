@@ -252,7 +252,10 @@ cmd_usage() {
             Will clone the given repository and add the given user to its database.
         $PROGRAM $COMMAND cabal pass-name
             Will list the users that have access to the given secret.
-
+        $PROGRAM $COMMAND induct user-id pass-name...
+            Will grant the specified user access to the given secrets.
+        $PROGRAM $COMMAND help
+            Show this help text.
 	_EOF
 }
 

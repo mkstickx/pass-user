@@ -74,18 +74,16 @@ context() {
     local command=$1
     shift
     local expect_fail="0"
-    local expected_output=()
+    local expected_output=( )
     local parse_mode=""
     while [[ $# -gt 0 ]]; do
         if [[ "$1" == "--fails" ]]; then
             expect_fail="1"
         elif [[ "$1" == "--output" ]]; then
-            shift
             parse_mode="output"
         else
             if [[ "$parse_mode" == "output" ]]; then
-                expected_output+=("$1")
-                shift
+                expected_output+=( "$1" )
             else
                 echo "ABORTING TEST DUE TO UNKNOWN ARG: $1" | out_fmt "$BOLD" "$RED"
                 exit 1
@@ -121,7 +119,7 @@ context() {
                 if [[ "$expected_output_count" -gt 0 ]]; then
                     if [[ "$had_output" -ge "$expected_output_count" ]]; then
                         echo "--- UNEXPECTED ADDITIONAL OUTPUT ---" | out_fmt "$BOLD" "$RED"
-                        echo "$line" | sed 's/^out: //' | out_fmt "$NORMAL" "$RED"
+                        echo "$line" | sed 's/^out: //' | out_fmt "$FAINT;$UNDERLINE" "$LIGHT_RED"
                         exit 1
                     elif [[ "$line" != "out: ${expected_output[$had_output]}" ]]; then
                         echo "--- UNEXPECTED OUTPUT ---" | out_fmt "$BOLD" "$RED"
@@ -136,7 +134,7 @@ context() {
                 else
                     echo "$line" | sed 's/out: //' | out_fmt "$FAINT" "$LIGHT_GREEN" "> "
                 fi
-                had_output++
+                ((had_output++))
             fi
         fi
     done
@@ -145,7 +143,6 @@ context() {
             echo "--- MISSING EXPECTED OUTPUT ---" | out_fmt "$BOLD" "$RED"
             while [[ "$had_output" -lt "$expected_output_count" ]]; do
                 echo "${expected_output[$had_output]}" | out_fmt "$NORMAL" "$RED"
-                had_output++;
             done
             exit 1
         fi
