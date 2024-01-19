@@ -1,6 +1,6 @@
 #!/user/bin/env bash
 
-source env_test.bash
+source lib/env_test.bash
 
 info "Alice initalizes a pass and the underlining git repository."
 alice "pass init alice"

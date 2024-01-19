@@ -1,4 +1,4 @@
-source common.bash
+source lib/common.bash
 
 ROOT=$(mktemp --tmpdir -d "test.pass-share.XXXXXXX")
 

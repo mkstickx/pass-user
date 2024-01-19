@@ -1,4 +1,5 @@
 #!/user/bin/env bash
+set -eo pipefail
 
 USER_EXTENSION_VERSION="0.0.1"
 USER_FOLDER=".users"
