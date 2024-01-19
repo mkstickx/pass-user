@@ -1,5 +1,7 @@
 #!/user/bin/env bash
 
+USER_EXTENSION_VERSION="0.0.1"
+
 subcommand_fail() {
     die "$1 Please specify a valid subcommand."
 }
@@ -19,6 +21,56 @@ set_path_to_check() {
     fi
 }
 
+USED_GPG_ID_FILE=""
+
+set_used_gpg_id_file() {
+    local recipient_source_dir="$1"
+    while [[ "$recipient_source_dir" =~ "$PREFIX/"*  ]]; do
+        if [[ -f "$recipient_source_dir/.gpg-id" ]]; then
+            break;
+        fi
+        recipient_source_dir=$(dirname "$target")
+    done
+    local found_file="$recipient_source_dir/.gpg-id"
+    if [[ "$found_file" =~ "$PREFIX/"*  ]] \
+        && [[ -f "$recipient_source_dir/.gpg-id" ]]; then
+        USED_GPG_ID_FILE="$found_file"
+    else
+        USED_GPG_ID_FILE="$PREFIX/.gpg-id"
+    fi
+}
+
+add_recipient() {
+    local dir="$1"
+    local user="$2"
+
+    local target="$PREFIX/$dir"
+    set_used_gpg_id_file "$target"
+    local gpg_id_file_to_edit="$target/.gpg-id"
+    if ! [[ -f "$USED_GPG_ID_FILE" ]]; then
+        die "Error: password store is not initialized. Try \"pass init\"."
+    fi
+    while read -r present_user; do
+        if [[ "$present_user" == "$user" ]]; then
+            echo "User '$user' already of dir '$dir'." 1>&2
+            return 0
+        fi
+    done < "$USED_GPG_ID_FILE"
+
+
+    if ! [[ -f "$gpg_id_file_to_edit" ]]; then
+        cp "$USED_GPG_ID_FILE" "$gpg_id_file_to_edit"
+    fi
+    echo "$user" >> "$gpg_id_file_to_edit"
+    reencrypt_path "$target"
+    set_git "$target"
+    git_add_file "$target" "Add '$user' to folder '$dir'."
+}
+
+cmd_user_version() {
+    echo "$USER_EXTENSION_VERSION"
+    exit 0
+}
 
 cmd_user_exists() {
     set_git "$PREFIX/"
@@ -65,24 +117,24 @@ cmd_user_list() {
 
 cmd_user_import() {
     [[ $# -lt 1 ]] && die "Usage: $PROGRAM $COMMAND gpg-id..."
-    users_to_trust=()
+    users_to_import=()
     user_directory="$PREFIX/.users"
 
     while [[ $# -gt 0 ]]; do
         if [[ $1 == "--all" ]]; then
             shopt -s nullglob
-            users_to_trust=( "$user_directory"/* )
+            users_to_import=( "$user_directory"/* )
             shopt -u nullglob
             break
         else
             if [[ ! -f "$user_directory/$1" ]]; then
                 die "Unkown user '$1'."
             fi
-            USERS+=( "$user_directory/$1" )
-            break
+            users_to_import+=( "$user_directory/$1" )
+            shift
         fi
     done
-    for user_file in "${users_to_trust[@]}"; do
+    for user_file in "${users_to_import[@]}"; do
         $GPG $PASSWORD_STORE_GPG_OPTS --import $user_file
     done
 }
@@ -96,22 +148,20 @@ cmd_user_privy( ) {
         exit 1
     fi
 
-
-
     while [[ $# -gt 0 ]]; do
         set_path_to_check "$1"
         if [[ -z "$PATH_TO_CHECK" ]]; then
             exit 1
         fi
-        set_gpg_recipients "$PREFIX/$PATH_TO_CHECK"
-        is_privy=0
-        for privy_user in "${GPG_RECIPIENTS[@]}"; do
-
-            if [[ "$checked_user" == "$privy_user" ]]; then
+        set_used_gpg_id_file "$PREFIX/$PATH_TO_CHECK"
+        if ! [[ -f "$USED_GPG_ID_FILE" ]]; then
+            die "Error: password store is not initialized. Try \"pass init\"."
+        fi
+        while read -r present_user; do
+            if [[ "$present_user" == "$checked_user" ]]; then
                 is_privy=1
-                break
             fi
-        done
+        done < "$USED_GPG_ID_FILE"
         shift
         if [[ "$is_privy" -eq 0 ]]; then
             exit 1
@@ -142,15 +192,52 @@ cmd_user_join() {
 
 
 
+
+cmd_user_induct() {
+    [[ $# -lt 2 ]] && die "Usage: $PROGRAM $COMMAND user induct gpg-id dir..."
+    local user="$1";
+    shift;
+    check_sneaky_paths "$@"
+    local dirs_to_induct=();
+    while [[ $# -gt 0 ]]; do
+
+        if [[ -d "$PREFIX/$1" ]]; then
+            dirs_to_induct+=("$1")
+        else
+            die "Error: Given argument '$1' is no present directory."
+        fi
+        shift
+    done
+
+    for dir_to_induct in "${dirs_to_induct[@]}"; do
+        add_recipient "$dir_to_induct" "$user"
+    done
+
+}
+
+cmd_user_cabal() {
+    [[ $# -ne 1 ]] && die "Usage: $PROGRAM $COMMAND user cabal path"
+    local secret="$PREFIX/$1"
+    check_sneaky_paths "$secret"
+    set_used_gpg_id_file "$secret"
+    if ! [[ -f "$USED_GPG_ID_FILE" ]]; then
+        die "Error: password store is not initialized. Try \"pass init\"."
+    fi
+    cat "$USED_GPG_ID_FILE"
+}
+
 [[ $# -lt 1 ]] && subcommand_fail "No subcommand given."
 
 case "$1" in
+    version) shift;     cmd_user_version "$@" ;;
     add) shift;         cmd_user_add "$@" ;;
     exists) shift;      cmd_user_exists "$@" ;;
     list|ls) shift;     cmd_user_list "$@" ;;
     import) shift;      cmd_user_import "$@" ;;
     privy) shift;       cmd_user_privy "$@" ;;
     join) shift;        cmd_user_join "$@" ;;
+    cabal) shift;       cmd_user_cabal "$@" ;;
+    induct) shift;      cmd_user_induct "$@" ;;
     *)              subcommand_fail "Unknown subcommand '$1'." ;;
 esac
 exit 0

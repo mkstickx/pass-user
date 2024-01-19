@@ -120,7 +120,7 @@ context() {
                         echo "$expected_output" | out_fmt "$NORMAL" "$RED"
                         exit 1
                     else
-                        echo "$line" | sed 's/out: //' | out_fmt "$BOLD" "$LIGHT_RED" "> "
+                        echo "$line" | sed 's/out: //' | out_fmt "$FAINT;$UNDERLINE" "$LIGHT_GREEN" "> "
 
                     fi
                 else
