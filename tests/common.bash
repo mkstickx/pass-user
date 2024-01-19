@@ -74,19 +74,26 @@ context() {
     local command=$1
     shift
     local expect_fail="0"
-    local expected_output=""
+    local expected_output=()
+    local parse_mode=""
     while [[ $# -gt 0 ]]; do
         if [[ "$1" == "--fails" ]]; then
             expect_fail="1"
         elif [[ "$1" == "--output" ]]; then
             shift
-            expected_output="$1"
+            parse_mode="output"
         else
-            echo "ABORTING TEST DUE TO UNKNOWN ARG: $1" | out_fmt "$BOLD" "$RED"
-            exit 1
+            if [[ "$parse_mode" == "output" ]]; then
+                expected_output+=("$1")
+                shift
+            else
+                echo "ABORTING TEST DUE TO UNKNOWN ARG: $1" | out_fmt "$BOLD" "$RED"
+                exit 1
+            fi
         fi
         shift
     done
+    local expected_output_count="${#expected_output[@]}"
     mapfile -t output < <( \
         PASSWORD_STORE_DIR="$user_directory/store" \
         PASSWORD_STORE_ENABLE_EXTENSIONS=true \
@@ -111,13 +118,16 @@ context() {
                 echo "$line" | sed 's/out: err: //' | out_fmt "$FAINT" "$LIGHT_RED" "> "
 
             elif [[ "$line" =~ "out: "* ]]; then
-                if [[ -n "$expected_output" ]]; then
-                    if [[ "$line" != "out: $expected_output" ]]; then
-                        echo "--- UNEXPECTED OUTPUT ---" | out_fmt "$BOLD" "$RED"
-                        echo "OUTPUT WAS:" | out_fmt "$BOLD" "$RED"
+                if [[ "$expected_output_count" -gt 0 ]]; then
+                    if [[ "$had_output" -ge "$expected_output_count" ]]; then
+                        echo "--- UNEXPECTED ADDITIONAL OUTPUT ---" | out_fmt "$BOLD" "$RED"
                         echo "$line" | sed 's/^out: //' | out_fmt "$NORMAL" "$RED"
-                        echo "BUT EXPECTED:" | out_fmt "$BOLD" "$RED"
-                        echo "$expected_output" | out_fmt "$NORMAL" "$RED"
+                        exit 1
+                    elif [[ "$line" != "out: ${expected_output[$had_output]}" ]]; then
+                        echo "--- UNEXPECTED OUTPUT ---" | out_fmt "$BOLD" "$RED"
+                        echo "$line" | sed 's/^out: //' | out_fmt "$NORMAL" "$RED"
+                        echo "--- EXPECTED ---" | out_fmt "$BOLD" "$RED"
+                        echo "${expected_output[$had_output]}" | out_fmt "$NORMAL" "$RED"
                         exit 1
                     else
                         echo "$line" | sed 's/out: //' | out_fmt "$FAINT;$UNDERLINE" "$LIGHT_GREEN" "> "
@@ -126,15 +136,17 @@ context() {
                 else
                     echo "$line" | sed 's/out: //' | out_fmt "$FAINT" "$LIGHT_GREEN" "> "
                 fi
-                had_output="1"
+                had_output++
             fi
         fi
     done
     if [[ "$is_success" -ne 0 ]]; then
-        if [[ -n "$expected_output" ]] && [[ "$had_output" -eq 0 ]]; then
+        if [[ "$expected_output_count" -gt 0 ]] && [[ "$had_output" -ne "$expected_output_count" ]]; then
             echo "--- MISSING EXPECTED OUTPUT ---" | out_fmt "$BOLD" "$RED"
-            echo "GOT NO OUTPUT EXPECTED WAS:" | out_fmt "$BOLD" "$RED"
-            echo "$expected_output" | out_fmt "$NORMAL" "$RED"
+            while [[ "$had_output" -lt "$expected_output_count" ]]; do
+                echo "${expected_output[$had_output]}" | out_fmt "$NORMAL" "$RED"
+                had_output++;
+            done
             exit 1
         fi
         if [[ $expect_fail -ne 0 ]]; then

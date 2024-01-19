@@ -1,9 +1,10 @@
 #!/user/bin/env bash
 
 USER_EXTENSION_VERSION="0.0.1"
-
+USER_FOLDER=".users"
 subcommand_fail() {
-    die "$1 Please specify a valid subcommand."
+    die "$1 Please specify a valid subcommand." \
+        "Run '$PROGRAMM $COMMAND help' for more information."
 }
 
 PATH_TO_CHECK=""
@@ -77,13 +78,13 @@ cmd_user_exists() {
     if [[ -z "$INNER_GIT_DIR" ]]; then
         die "The git repository is not initialized."
     fi
-    if ! [[ -d "$PREFIX/.users" ]]; then
+    if ! [[ -d "$PREFIX/$USER_FOLDER" ]]; then
         die "User management not initialized."
     fi
 
     while [[ $# -gt 0 ]]; do
         local user="$1"
-        if ! [[ -f "$PREFIX/.users/$user" ]]; then
+        if ! [[ -f "$PREFIX/$USER_FOLDER/$user" ]]; then
             exit 1
         fi
         shift
@@ -94,7 +95,7 @@ cmd_user_exists() {
 cmd_user_add() {
     [[ $# -ne 1 ]] && die "Usage: $PROGRAM $COMMAND add gpg-id"
     gpg_id=$1
-    user_directory="$PREFIX/.users"
+    user_directory="$PREFIX/$USER_FOLDER"
     if ! [[ -e $user_directory ]]; then
         mkdir "$user_directory"
     elif ! [[ -d "$user_directory" ]]; then
@@ -112,16 +113,16 @@ cmd_user_add() {
 
 cmd_user_list() {
     [[ $# -ne 0 ]] && die "Usage: $PROGRAM $COMMAND list"
-    ls "$PREFIX/.users"
+    ls "$PREFIX/$USER_FOLDER"
 }
 
 cmd_user_import() {
     [[ $# -lt 1 ]] && die "Usage: $PROGRAM $COMMAND gpg-id..."
     users_to_import=()
-    user_directory="$PREFIX/.users"
+    user_directory="$PREFIX/$USER_FOLDER"
 
     while [[ $# -gt 0 ]]; do
-        if [[ $1 == "--all" ]]; then
+        if [[ $1 == "--all" ]] || [[ $1 == "-a" ]]; then
             shopt -s nullglob
             users_to_import=( "$user_directory"/* )
             shopt -u nullglob
@@ -144,7 +145,7 @@ cmd_user_privy( ) {
     checked_user="$1"
     shift
 
-    if ! [[ -f "$PREFIX/.users/$checked_user" ]]; then
+    if ! [[ -f "$PREFIX/$USER_FOLDER/$checked_user" ]]; then
         exit 1
     fi
 
@@ -226,6 +227,36 @@ cmd_user_cabal() {
     cat "$USED_GPG_ID_FILE"
 }
 
+cmd_usage() {
+	cat <<-_EOF
+    Version $USER_VERSION management for the pass command.
+	Usage:
+	    $PROGRAM $COMMAND version
+	        Show version information.
+        $PROGRAM $COMMAND add gpg-id
+            Add a user to the repository. Its public id will be stored
+            in the $USER_FOLDER folder.
+        $PROGRAM $COMMAND exists gpg-id...
+            Will succeed if git is initilized the $USER_FOLDER folder itself and
+            all listed user-ids are present.
+        $PROGRAM $COMMAND list
+            Lists all users registered in the repository.
+        $PROGRAM $COMMAND ls
+            Shorthand for the list command.
+        $PROGRAM $COMMAND import [--all,-a] user-id...
+            Will import public ids from the $USER_FOLDER folder into gpg.
+        $PROGRAM $COMMAND privy user-id pass-name...
+            Will succeed if all pass-name exist and the given user is listed
+            to have access to these.
+        $PROGRAM $COMMAND join user-id repo-url
+            Will clone the given repository and add the given user to its database.
+        $PROGRAM $COMMAND cabal pass-name
+            Will list the users that have access to the given secret.
+
+	_EOF
+}
+
+
 [[ $# -lt 1 ]] && subcommand_fail "No subcommand given."
 
 case "$1" in
@@ -238,6 +269,7 @@ case "$1" in
     join) shift;        cmd_user_join "$@" ;;
     cabal) shift;       cmd_user_cabal "$@" ;;
     induct) shift;      cmd_user_induct "$@" ;;
+    help) shift;        cmd_user_help "$@" ;;
     *)              subcommand_fail "Unknown subcommand '$1'." ;;
 esac
 exit 0

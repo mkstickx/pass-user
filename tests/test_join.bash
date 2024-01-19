@@ -81,8 +81,9 @@ alice "pass git push"
 
 info "Bob can access these secrets after pulling the git."
 bob "pass git pull"
-bob "pass user cabal shared"
+bob "pass user cabal shared" --output "alice" "bob"
 bob "pass user privy bob shared"
+bob "pass user privy bob shared for_alice_only"
 bob "pass show shared/bar" --output "SECRET_BAR"
 bob "pass show shared/foo" --output "I LOVE YOU TOO"
 
