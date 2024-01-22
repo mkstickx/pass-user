@@ -1,7 +1,7 @@
 #!/user/bin/env bash
 set -eo pipefail
 
-USER_EXTENSION_VERSION="0.0.1"
+USER_EXTENSION_VERSION="0.1.0"
 USER_FOLDER=".users"
 subcommand_fail() {
     die "$1 Please specify a valid subcommand." \
@@ -190,6 +190,7 @@ cmd_user_join() {
         git clone "$remote_to_join" "$PREFIX"
     fi
     cmd_user_add "$user_to_join"
+    cmd_git push
 }
 
 

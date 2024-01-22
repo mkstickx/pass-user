@@ -48,6 +48,10 @@ alice "pass git push --set-upstream origin master"
 info "Bob joins the repostory and adds himself to it."
 bob "pass user join bob $GIT_REPO"
 
+info "The create command automatically pushed to bobs user entry to the git."
+alice "pass git pull"
+alice "pass user exists bob"
+
 info "He imports all users present."
 bob "pass user import --all"
 
