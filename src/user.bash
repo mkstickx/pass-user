@@ -1,11 +1,11 @@
 #!/user/bin/env bash
 set -eo pipefail
 
-USER_EXTENSION_VERSION="0.1.0"
+USER_EXTENSION_VERSION="0.2.0"
 USER_FOLDER=".users"
 subcommand_fail() {
     die "$1 Please specify a valid subcommand." \
-        "Run '$PROGRAMM $COMMAND help' for more information."
+        "Run '$PROGRAM $COMMAND help' for more information."
 }
 
 PATH_TO_CHECK=""
@@ -67,6 +67,27 @@ add_recipient() {
     reencrypt_path "$target"
     set_git "$target"
     git_add_file "$target" "Add '$user' to folder '$dir'."
+}
+
+cmd_user_init() {
+    if [[ -e "$PREFIX" ]]; then
+        die "Pass already initialized."
+    fi
+    local user_to_join="$1"
+    local remote_to_join="$2"
+    set_git "$PREFIX/"
+    if [[ -n "$INNER_GIT_DIR" ]]; then
+        die "The git repository is already initialized."
+    fi
+    git clone "$remote_to_join" "$PREFIX"
+    if [[ -e "$PREFIX/.gpg-id" ]]; then
+        rm -rf "$PREFIX"
+        die "Pass already initialized in cloned in '$remote_to_join'."
+    fi
+    cmd_init "$user_to_join"
+    cmd_git init
+    cmd_user_add "$user_to_join"
+    cmd_git push
 }
 
 cmd_user_version() {
@@ -203,11 +224,13 @@ cmd_user_induct() {
     check_sneaky_paths "$@"
     local dirs_to_induct=();
     while [[ $# -gt 0 ]]; do
-
+        if ! [[ -e "$PREFIX/$1" ]]; then
+            mkdir -p "$PREFIX/$1"
+        fi
         if [[ -d "$PREFIX/$1" ]]; then
             dirs_to_induct+=("$1")
         else
-            die "Error: Given argument '$1' is no present directory."
+            die "Error: Given argument '$1' is not a directory."
         fi
         shift
     done
@@ -233,6 +256,8 @@ cmd_usage() {
 	cat <<-_EOF
     Version $USER_VERSION management for the pass command.
 	Usage:
+        $PROGRAM $COMMAND init user-id repo-url
+            Will clone the given repository and add the given user to its database.
 	    $PROGRAM $COMMAND version
 	        Show version information.
         $PROGRAM $COMMAND add gpg-id
@@ -266,6 +291,7 @@ cmd_usage() {
 
 case "$1" in
     version) shift;     cmd_user_version "$@" ;;
+    init) shift;        cmd_user_init "$@" ;;
     add) shift;         cmd_user_add "$@" ;;
     exists) shift;      cmd_user_exists "$@" ;;
     list|ls) shift;     cmd_user_list "$@" ;;

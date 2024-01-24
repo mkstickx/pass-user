@@ -2,15 +2,28 @@ source lib/common.bash
 
 ROOT=$(mktemp --tmpdir -d "test.pass-share.XXXXXXX")
 
-ALICE_DIR=$(setup_context "$ROOT" alice)
+ALICE_DIR=""
+if [[ "$ACTORS" == *"alice"* ]]; then
+    ALICE_DIR=$(setup_context "$ROOT" alice)
+fi
 alice() {
-    context "alice" "$MANGENTA" "$ALICE_DIR" "$@"
+    context "alice" "$CYAN" "$ALICE_DIR" "$@"
+}
+BOB_DIR=""
+if [[ "$ACTORS" == *"bob"* ]]; then
+    BOB_DIR=$(setup_context "$ROOT" bob)
+fi
+bob() {
+    context "bob" "$BLUE" "$BOB_DIR" "$@"
+}
+MALLROY_DIR=""
+if [[ "$ACTORS" == *"mallroy"* ]]; then
+    MALLROY_DIR=$(setup_context "$ROOT" mallroy)
+fi
+mallroy() {
+    context "mallroy" "$MANGENTA" "$MALLROY_DIR" "$@"
 }
 
-BOB_DIR=$(setup_context "$ROOT" bob)
-bob() {
-    context "bob" "$CYAN" "$BOB_DIR" "$@"
-}
 REPO_NAME="repository.git"
 
 GIT_REPO=$(setup_repository "$ROOT" "$REPO_NAME")

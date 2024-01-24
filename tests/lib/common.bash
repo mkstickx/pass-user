@@ -76,6 +76,9 @@ context() {
     local expect_fail="0"
     local expected_output=( )
     local parse_mode=""
+    if [[ -z "$user_directory" ]]; then
+        echo "User '$user' not part of the test." | out_fmt "$BOLD" "$RED"
+    fi
     while [[ $# -gt 0 ]]; do
         if [[ "$1" == "--fails" ]]; then
             expect_fail="1"
