@@ -1,7 +1,7 @@
 #!/user/bin/env bash
 
 ACTORS="alice"
-source lib/env_test.bash
+source lib/setup_test.bash
 
 info "Alice initalizes a pass and the underlining git repository."
 alice "pass init alice"

@@ -1,7 +1,7 @@
 #!/user/bin/env bash
 
 ACTORS="alice,bob"
-source lib/env_test.bash
+source lib/setup_test.bash
 
 info "Alice initalizes a pass and becomes the primary user."
 alice "pass user init alice $GIT_REPO"

@@ -1,7 +1,7 @@
 #!/user/bin/env bash
 
 ACTORS="alice,bob"
-source lib/env_test.bash
+source lib/setup_test.bash
 
 info "Bob joins the non initialized repository."
 bob "pass user join bob $GIT_REPO"
