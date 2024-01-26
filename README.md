@@ -1,9 +1,10 @@
 # pass share
 
-An extension for the [password store](https://www.passwordstore.org/) enabling multi-user settings.
-The the pass command can expose its underlining data structure as a git repository. This extension implements a rudimentary user management by placing the participants public keys in the `.users` directory of this repository.
+An extension for the [password store](https://www.passwordstore.org/) providing commands for multi-user use cases.
 
-The existence of an, initially empty, git repository is a prerequisite to use the shared password store.
+The the pass command can expose its underlining data structure as a git repository. This extension implements a rudimentary user management by placing the participants public keys in the `.users` directory of that repository.
+
+An, initially empty, git repository is required to use the share the `.password-store` directory.
 
 No trust related actions will be preformed by this plugin.
 

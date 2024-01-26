@@ -1,7 +1,7 @@
 #!/user/bin/env bash
 set -eo pipefail
 
-USER_EXTENSION_VERSION="0.2.0"
+USER_EXTENSION_VERSION="0.2.1"
 USER_FOLDER=".users"
 subcommand_fail() {
     die "$1 Please specify a valid subcommand." \
@@ -104,10 +104,11 @@ cmd_user_exists() {
         die "User management not initialized."
     fi
 
+
     while [[ $# -gt 0 ]]; do
         local user="$1"
         if ! [[ -f "$PREFIX/$USER_FOLDER/$user" ]]; then
-            exit 1
+            die "Unknown user '$user'."
         fi
         shift
     done
@@ -220,6 +221,9 @@ cmd_user_join() {
 cmd_user_induct() {
     [[ $# -lt 2 ]] && die "Usage: $PROGRAM $COMMAND user induct gpg-id dir..."
     local user="$1";
+    if ! [[ -f "$PREFIX/$USER_FOLDER/$user" ]]; then
+        die "Unknown user '$user'."
+    fi
     shift;
     check_sneaky_paths "$@"
     local dirs_to_induct=();

@@ -62,6 +62,8 @@ alice "pass show for_alice_only/bar" --output "I LOVE YOU"
 
 info "Alice decides to share some secrets with bob."
 alice "pass user import bob"
+alice "pass user induct bobz shared" --fails
+info "An typo caused the command to fail."
 alice "pass user induct bob shared"
 alice "echo \"I LOVE YOU TOO\" | pass insert -e shared/foo"
 alice "pass git push"
