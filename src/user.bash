@@ -42,6 +42,12 @@ set_used_gpg_id_file() {
     fi
 }
 
+check_user_key( ) {
+    local user="$1"
+    $GPG $PASSWORD_STORE_GPG_OPTS --list-secret-keys | grep "$user" \
+        || die "Unknown user '$user'."
+}
+
 add_recipient() {
     local dir="$1"
     local user="$2"
@@ -75,6 +81,7 @@ cmd_user_init() {
     fi
     local user_to_join="$1"
     local remote_to_join="$2"
+    check_user_key "$user_to_join"
     set_git "$PREFIX/"
     if [[ -n "$INNER_GIT_DIR" ]]; then
         die "The git repository is already initialized."
@@ -199,6 +206,7 @@ cmd_user_join() {
     [[ $# -ne 2 ]] && die "Usage: $PROGRAM $COMMAND user join gpg-id repo-url"
     local user_to_join="$1"
     local remote_to_join="$2"
+    check_user_key "$user_to_join"
     if [[ -d "$PREFIX" ]]; then
         set_git "$PREFIX"
         [[ -z "$INNER_GIT_DIR" ]] && \
