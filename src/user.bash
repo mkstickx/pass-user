@@ -31,7 +31,7 @@ set_used_gpg_id_file() {
         if [[ -f "$recipient_source_dir/.gpg-id" ]]; then
             break;
         fi
-        recipient_source_dir=$(dirname "$target")
+        recipient_source_dir=$(dirname "$recipient_source_dir")
     done
     local found_file="$recipient_source_dir/.gpg-id"
     if [[ "$found_file" =~ "$PREFIX/"*  ]] \
@@ -188,6 +188,7 @@ cmd_user_privy( ) {
         if ! [[ -f "$USED_GPG_ID_FILE" ]]; then
             die "Error: password store is not initialized. Try \"pass init\"."
         fi
+        local is_privy=0
         while read -r present_user; do
             if [[ "$present_user" == "$checked_user" ]]; then
                 is_privy=1
