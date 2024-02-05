@@ -1,0 +1,22 @@
+#! /bin/bash
+
+for case in *.bash; do
+    # name="${case%.*}"
+    # name="${name#??_}"
+    name=$(
+        echo "$case" \
+        | sed \
+        -e "s/^.._//" \
+        -e "s/\.bash$//" \
+        -e "s/_/ /g"
+
+    )
+    if (which toilet &> /dev/null); then
+        toilet --filter border --font future "$name"
+
+    else
+        echo "========================================"
+        echo "TEST CASE: $name"
+    fi
+    bash "$case"
+done

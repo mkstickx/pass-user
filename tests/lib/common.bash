@@ -15,7 +15,7 @@ setup_context() {
         --homedir "$gpg_home" \
         --passphrase "" \
         --pinentry-mode loopback \
-        --quick-gen-key  "$pass_user" default default > /dev/null
+        --quick-gen-key  "$pass_user" default default &> /dev/null
     echo "$user_directory"
 }
 
@@ -23,7 +23,7 @@ setup_repository() {
     local root="$1"
     local name="$2"
     local path="$root/$name"
-    git init --bare "$path" > /dev/null
+    git init --bare "$path" &> /dev/null
     echo "$path"
 }
 

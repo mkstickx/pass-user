@@ -19,6 +19,7 @@ alice "echo \"SECRET_BAR\" | pass insert -e shared/with_bob/bar"
 alice "pass user privy alice for_alice_only"
 alice "pass user privy alice shared"
 alice "pass user privy alice shared/with_bob"
+alice "pass user privy alice shared/with_bob/bar"
 alice "pass user privy alice for_alice_only shared/with_bob"
 alice "pass user privy alice unknown_path" --fails
 
@@ -74,6 +75,8 @@ bob "pass git pull"
 bob "pass user cabal shared/with_bob" --output "alice" "bob"
 bob "pass user privy bob shared" --fails
 bob "pass user privy bob shared/with_bob"
+bob "pass user privy bob shared/with_bob/bar"
+
 bob "pass user privy bob for_alice_only" --fails
 
 bob "pass user privy bob shared/with_bob for_alice_only" --fails

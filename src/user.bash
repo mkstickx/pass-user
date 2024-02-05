@@ -1,7 +1,7 @@
 #!/user/bin/env bash
 set -eo pipefail
 
-USER_EXTENSION_VERSION="0.2.1"
+USER_EXTENSION_VERSION="0.2.2"
 USER_FOLDER=".users"
 subcommand_fail() {
     die "$1 Please specify a valid subcommand." \
@@ -18,7 +18,7 @@ set_path_to_check() {
         if [[ -d "$repo_path" ]]; then
             PATH_TO_CHECK="$1"
         elif [[ -f "$repo_path.gpg" ]]; then
-            PATH_TO_CHECK=$( dirname "$repo_path" )
+            PATH_TO_CHECK=$( dirname "$1" )
         fi
     fi
 }
